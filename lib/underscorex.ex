@@ -57,9 +57,68 @@ defmodule Underscorex.Iterators do
       def invoke(col, {m, f, a}), do: col |> map fn({item, _})-> apply(m, f, [item] ++ a) end
       def invoke(col, func), do: col |> map fn({item, _})-> apply(func, [item]) end
 
-      #def where(dict, args \\ []), do: 
+
+
+      def takeitem(obj, propname) when is_record(obj), do: takeitem(obj.to_keywords, propname)
+      def takeitem(obj, propname), do: Dict.get(obj, propname, nil)
+      def takeitem(obj, propname, default) when is_record(obj), do: takeitem(obj.to_keywords, propname, default)
+      def takeitem(obj, propname, default), do: Dict.get(obj, propname, default)
+
+      def pluck(col, propname) when is_record(col), do: pluck(col.to_keywords, propname)
+      def pluck(col, propname), do: col |> Enum.map fn(item) -> takeitem(item, propname) end
+      def pluck(col, propname, default) when is_record(col), do: pluck(col.to_keywords, propname, default)
+      def pluck(col, propname, default), do: col |> Enum.map fn(item) -> takeitem(item, propname, default) end
+
+      def sort(col), do: Enum.sort col
+      def sort(col, func), do: Enum.sort(col, func)
+      def sort(col, func, ctx), do: Enum.sort(col, fn(x)-> func.({x, ctx}) end)
+
+      # def group(col, func, ctx) do 
+      #   Enum.reduce col, [], fn(item, res)-> 
+      #       new_key = func.({item, ctx})
+      #       case Dict.has_key?(res, new_key) do
+      #         true -> 
+      #           res[new_key] = res[new_key] ++ [item]
+      #           res
+      #         _ -> 
+      #           res[new_key] = [item]
+      #           res
+      #       end
+      #     end
+      # end
+
+      def where(dict, args \\ []), do: filter(dict, fn({item, _})-> Underscorex.Utility.matches(item, args) end)
+      def find_where(dict, args), do: find(dict, fn({item, _})-> Underscorex.Utility.matches(item, args) end)
+
+      def max(col), do: Enum.max col
+      def min(col), do: Enum.min col
+      def shuffle(col), do: Enum.shuffle col
+      def reverse(col), do: Enum.reverse col
+
 
 end
+
+defmodule Underscorex.Arrays do
+
+      def size(col), do: length(col)
+
+      def first(col), do: List.first(col)
+      def last(col), do: List.last(col)
+      
+
+      def initial(col, n \\ 1), do: Enum.slice(col, 0, length(col)-n)
+      def rest(col, n \\ 1), do: Enum.slice(col, n, length(col))
+
+      def compact(col), do: col |> Enum.filter &(Underscorex.Utility.identity &1)
+      def flatten(col), do: col |> List.flatten 
+      def without(col, items) when is_list(items), do: Enum.reject(col, fn(x)-> x in items end)
+      def without(col, items), do: Enum.reject(col, fn(x)-> x == items end)
+      def only(col, items) when is_list(items), do: Enum.filter(col, fn(x)-> x in items end)
+      def only(col, items), do: Enum.filter(col, fn(x)-> x == items end)
+
+  
+end
+
 
 defmodule Underscorex.Utility do
   defmacro __using__(_options) do
