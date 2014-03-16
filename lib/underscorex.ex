@@ -11,7 +11,6 @@ defmodule Underscorex.Iterators do
     quote do
 
 
-
     end
   end
       
@@ -43,6 +42,7 @@ defmodule Underscorex.Iterators do
       def every(col, iter), do: col |> Enum.all? fn(item) -> iter.({item, col}) end
       def all?(col, iter, ctx), do: every(col, iter, ctx)
       def all?(col, iter), do: every(col, iter)
+      def all?(col), do: every(col, &(Underscorex.Utility.identity &1))
 
       def some(col, iter, ctx), do: col |> Enum.any? fn(item) -> iter.({item, col, ctx}) end
       def some(col, iter), do: col |> Enum.any? fn(item) -> iter.({item, col}) end
@@ -52,10 +52,12 @@ defmodule Underscorex.Iterators do
       def contains(col, value), do: col |> any? fn(item) -> item == value end
       def include(col, value), do: contains(col, value)
 
-      def invoke(col, func, args \\ []), do: col |> map fn({item, _})-> apply(func, [item] ++ args) end
+      def invoke(col, func, args), do: col |> map fn({item, _})-> apply(func, [item] ++ args) end
       def invoke(col, {m, f, []}), do: col |> map fn({item, _})-> apply(m, f, [item]) end
       def invoke(col, {m, f, a}), do: col |> map fn({item, _})-> apply(m, f, [item] ++ a) end
+      def invoke(col, func), do: col |> map fn({item, _})-> apply(func, [item]) end
 
+      #def where(dict, args \\ []), do: 
 
 end
 
@@ -69,11 +71,21 @@ defmodule Underscorex.Utility do
       def identity(nil), do: false
       def identity(false), do: false
       def identity(""), do: false
-      #def identity(''), do: false
       def identity([]), do: false
       def identity({}), do: false
-      #def identity(<<"">>), do: false
       def identity(_), do: true
+
+      def matches(obj, attrs) when obj == attrs, do: true
+      def matches(obj, attrs) when is_record(obj), do: matches(obj.to_keywords, attrs)
+      def matches(obj, attrs) when is_record(attrs), do: matches(obj, attrs.to_keywords)
+      def matches(obj, attrs) do
+         Enum.map(Dict.keys(attrs), fn(attr_keys) -> 
+          case Dict.has_key? obj, attr_keys do
+            false -> false
+            true -> obj[attr_keys] == attrs[attr_keys]
+          end
+        end) |> Enum.all? &(&1)
+      end
 
 end
 
