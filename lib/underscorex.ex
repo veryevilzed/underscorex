@@ -27,27 +27,36 @@ defmodule Underscorex.Iterators do
       def reduce(col, acc, iter), do: col |> Enum.reduce acc, fn(item, acc) -> iter.({item, acc, col}) end
       def reduce(col, iter), do: col |> Enum.reduce fn(item, acc) -> iter.({item, acc, col}) end
 
+
       def find(col, ifnone, iter, ctx), do: col |> Enum.find ifnone, fn(item)-> iter.({item, col, ctx}) end
       def find(col, iter, ctx) when is_function(iter), do: col |> Enum.find fn(item)-> iter.({item, col, ctx}) end
       def find(col, ifnone, iter), do: col |> Enum.find ifnone, fn(item)-> iter.({item, col}) end
       def find(col, iter), do: col |> Enum.find fn(item)-> iter.({item, col}) end
-      
+      def detect(col, iter, ctx), do: find(col, iter, ctx)
+      def detect(col, iter), do: find(col, iter)
+
+
+
+
       def filter(col, iter, ctx), do: col |> Enum.filter fn(item) -> iter.({item, col, ctx}) end
       def filter(col, iter), do: col |> Enum.filter fn(item) -> iter.({item, col}) end
+      def select(col, iter, ctx), do: filter(col, iter, ctx)
+      def select(col, iter), do: filter(col, iter)
+
 
       def reject(col, iter, ctx), do: col |> Enum.reject fn(item) -> iter.({item, col, ctx}) end
       def reject(col, iter), do: col |> Enum.reject fn(item) -> iter.({item, col}) end
 
       def every(col, iter, ctx), do: col |> Enum.all? fn(item) -> iter.({item, col, ctx}) end
       def every(col, iter), do: col |> Enum.all? fn(item) -> iter.({item, col}) end
-      def all?(col, iter, ctx), do: every(col, iter, ctx)
-      def all?(col, iter), do: every(col, iter)
-      def all?(col), do: every(col, &(Underscorex.Utility.identity &1))
+      def all(col, iter, ctx), do: every(col, iter, ctx)
+      def all(col, iter), do: every(col, iter)
+      def all(col), do: every(col, &(Underscorex.Utility.identity &1))
 
       def some(col, iter, ctx), do: col |> Enum.any? fn(item) -> iter.({item, col, ctx}) end
       def some(col, iter), do: col |> Enum.any? fn(item) -> iter.({item, col}) end
-      def any?(col, iter, ctx), do: some(col, iter, ctx)
-      def any?(col, iter), do: some(col, iter)
+      def any(col, iter, ctx), do: some(col, iter, ctx)
+      def any(col, iter), do: some(col, iter)
 
       def contains(col, value), do: col |> any? fn(item) -> item == value end
       def include(col, value), do: contains(col, value)
@@ -103,11 +112,16 @@ defmodule Underscorex.Arrays do
       def size(col), do: length(col)
 
       def first(col), do: List.first(col)
+      def head(col), do: first(col)
+      def take(col), do: first(col)
+
+
       def last(col), do: List.last(col)
       
-
       def initial(col, n \\ 1), do: Enum.slice(col, 0, length(col)-n)
       def rest(col, n \\ 1), do: Enum.slice(col, n, length(col))
+      def tail(col, n \\ 1), do: rest(col, n)
+      def drop(col, n \\ 1), do: rest(col, n)
 
       def compact(col), do: col |> Enum.filter &(Underscorex.Utility.identity &1)
       def flatten(col), do: col |> List.flatten 
@@ -116,7 +130,25 @@ defmodule Underscorex.Arrays do
       def only(col, items) when is_list(items), do: Enum.filter(col, fn(x)-> x in items end)
       def only(col, items), do: Enum.filter(col, fn(x)-> x == items end)
 
-  
+      def union(col1, col2), do: :coming_soon
+      def union(cols) when is_list(cols), do: :coming_soon
+      def intersection(col1, col2), do: :coming_soon
+      def difference(col1, col2), do: :coming_soon
+
+      def uniq(col), do: :coming_soon
+      def unique(col), do: uniq(col)
+
+      def zip(cols), do: List.zip(cols)
+      def zip(col1, col2), do: Enum.zip(col1, col2)
+
+      def object(keys, values), do: zip(keys, values) |> Enum.reduce [], fn({key, val}, dict) -> Dict.put(dict, key, val) end
+
+      def index_of(col, item), do: col |> Enum.find_index fn(x)-> x == item end
+      def last_index_of(col, item), do: Enum.reverse(col) |> Enum.find_index fn(x)-> x == item end
+
+      def range(start // 0, stop, step // 1), do: :coming_soon
+      def sortedIndex(col, item), do: :coming_soon
+
 end
 
 
