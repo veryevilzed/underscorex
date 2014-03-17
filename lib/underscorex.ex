@@ -178,6 +178,10 @@ defmodule Underscorex.Utility do
         end) |> Enum.all? &(&1)
       end
 
+      def result(obj, attrs) when is_list(obj) && is_integer(attrs), do: Enum.fetch!(obj, attrs)
+      def result(obj, attrs) when is_tuple(obj) && is_integer(attrs), do: elem(obj, attrs)
+      def result(obj, attrs), do: Enum.fetch!(obj, attrs)
+
 end
 
 defmodule U do
