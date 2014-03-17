@@ -225,6 +225,14 @@ defmodule Underscorex.Functions do
     {pid, :erlang.send_after(time, pid, {:time_message, func})}
   end
 
+  def triger(event, args \\ nil) do
+    case :pg2.get_members(event) do
+      {:error, res} -> {:error, res}
+      pids -> Enum.each pids, fn(pid) -> send pid, { :bind_event, event, args }
+    end
+  end
+
+  def bind(event, func), do: :coming_soon
 
 end
 
