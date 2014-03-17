@@ -8,14 +8,9 @@ defmodule Underscorex.Iterators do
   ({value, ctx, key})
   """
   defmacro __using__(_options) do
-    quote do
+    quote location: :keep  do
 
-
-    end
-  end
       
-      def is_dict(dict), do: is_record(dict, HashDict)
-
       def each(col, iter, ctx), do: col |> Enum.each fn(item) -> iter.({item, col, ctx}) end
       def each(col, iter), do: col |> Enum.each fn(item) -> iter.({item, col}) end
     
@@ -51,7 +46,7 @@ defmodule Underscorex.Iterators do
       def every(col, iter), do: col |> Enum.all? fn(item) -> iter.({item, col}) end
       def all(col, iter, ctx), do: every(col, iter, ctx)
       def all(col, iter), do: every(col, iter)
-      def all(col), do: every(col, &(Underscorex.Utility.identity &1))
+      def all(col), do: every(col, &(identity &1))
 
       def some(col, iter, ctx), do: col |> Enum.any? fn(item) -> iter.({item, col, ctx}) end
       def some(col, iter), do: col |> Enum.any? fn(item) -> iter.({item, col}) end
@@ -108,8 +103,8 @@ defmodule Underscorex.Iterators do
       def count_by(col, iter), do: group_by(col, iter) |> Enum.map fn({key, data}) -> {key, length(data)} end
       def count_by(col, iter, ctx), do: group_by(col, iter, ctx) |> Enum.map fn({key, data}) -> {key, length(data)} end
 
-      def where(dict, args \\ []), do: filter(dict, fn({item, _})-> Underscorex.Utility.matches(item, args) end)
-      def find_where(dict, args), do: find(dict, fn({item, _})-> Underscorex.Utility.matches(item, args) end)
+      def where(dict, args \\ []), do: filter(dict, fn({item, _})-> matches(item, args) end)
+      def find_where(dict, args), do: find(dict, fn({item, _})-> matches(item, args) end)
 
       def max(col), do: Enum.max col
       def min(col), do: Enum.min col
@@ -119,9 +114,15 @@ defmodule Underscorex.Iterators do
       def size(col) when is_list(col), do: length(col)
       def size(col), do: col |> Dict.keys |> length
 
+
+    end
+  end
 end
 
 defmodule Underscorex.Arrays do
+
+  defmacro __using__(_options) do
+    quote location: :keep  do
 
       def size(col), do: length(col)
 
@@ -137,7 +138,7 @@ defmodule Underscorex.Arrays do
       def tail(col, n \\ 1), do: rest(col, n)
       def drop(col, n \\ 1), do: rest(col, n)
 
-      def compact(col), do: col |> Enum.filter &(Underscorex.Utility.identity &1)
+      def compact(col), do: col |> Enum.filter &(identity &1)
       def flatten(col), do: col |> List.flatten 
       def without(col, items) when is_list(items), do: Enum.reject(col, fn(x)-> x in items end)
       def without(col, items), do: Enum.reject(col, fn(x)-> x == items end)
@@ -146,6 +147,7 @@ defmodule Underscorex.Arrays do
 
       def union(col1, col2), do: :coming_soon
       def union(cols) when is_list(cols), do: :coming_soon
+      
       def intersection(col1, col2), do: :coming_soon
       def difference(col1, col2), do: :coming_soon
 
@@ -160,17 +162,17 @@ defmodule Underscorex.Arrays do
       def index_of(col, item), do: col |> Enum.find_index fn(x)-> x == item end
       def last_index_of(col, item), do: Enum.reverse(col) |> Enum.find_index fn(x)-> x == item end
 
-      def range(start // 0, stop, step // 1), do: :coming_soon
+      def range(start \\ 0, stop, step \\ 1), do: :coming_soon
       def sortedIndex(col, item), do: :coming_soon
 
+    end
+  end
 end
 
 
 defmodule Underscorex.Utility do
   defmacro __using__(_options) do
-    quote do
-    end
-  end
+    quote location: :keep do
 
       def identity(0), do: false
       def identity(nil), do: false
@@ -197,49 +199,59 @@ defmodule Underscorex.Utility do
       def result(obj, attrs) when is_tuple(obj) and is_integer(attrs), do: elem(obj, attrs)
       def result(obj, attrs), do: obj[attrs]
 
+
+    end
+  end
 end
 
 defmodule Underscorex.Functions do
   
-  def now(:sec), do: Date.convert(Date.now, :sec)
-  def now(:msec), do: Float.floor(Time.now(:msec))
-  def now, do: Time.now(:msec)
-  def delay(time, func) do
-    pid = spawn(fn ->
-      receive do
-        {:time_message, func} -> func.()
-        _oth -> _oth
+  defmacro __using__(_options) do
+    quote location: :keep do
+
+      def now(:sec), do: Date.convert(Date.now, :sec)
+      def now(:msec), do: Float.floor(Time.now(:msec))
+      def now, do: Time.now(:msec)
+      def delay(time, func) do
+        pid = spawn(fn ->
+          receive do
+            {:time_message, func} -> func.()
+            _oth -> _oth
+          end
+        end)
+        {pid, :erlang.send_after(time, pid, {:time_message, func})}
       end
-    end)
-    {pid, :erlang.send_after(time, pid, {:time_message, func})}
-  end
 
 
-  def delay(time, func, args) do
-    pid = spawn(fn ->
-      receive do
-        {:time_message, func} -> apply(func, args)
-        _oth -> _oth
+      def delay(time, func, args) do
+        pid = spawn(fn ->
+          receive do
+            {:time_message, func} -> apply(func, args)
+            _oth -> _oth
+          end
+        end)
+        {pid, :erlang.send_after(time, pid, {:time_message, func})}
       end
-    end)
-    {pid, :erlang.send_after(time, pid, {:time_message, func})}
-  end
 
-  def triger(event, args \\ nil) do
-    case :pg2.get_members(event) do
-      {:error, res} -> {:error, res}
-      pids -> Enum.each pids, fn(pid) -> send pid, { :bind_event, event, args }
+      # def triger(event, args \\ nil) do
+      #   case :pg2.get_members(event) do
+      #     {:error, res} -> {:error, res}
+      #     pids -> Enum.each pids, fn(pid) -> send pid, { :bind_event, event, args }
+      #   end
+      # end
+
+      # def bind(event, func), do: :coming_soon
+
+
     end
   end
-
-  def bind(event, func), do: :coming_soon
-
 end
 
 defmodule U do
 
   use Underscorex.Utility
   use Underscorex.Iterators
+  use Underscorex.Arrays
+  use Underscorex.Functions 
 
 end
-
