@@ -130,7 +130,6 @@ defmodule Underscorex.Arrays do
       def head(col), do: first(col)
       def take(col), do: first(col)
 
-
       def last(col), do: List.last(col)
       
       def initial(col, n \\ 1), do: Enum.slice(col, 0, length(col)-n)
@@ -244,16 +243,13 @@ defmodule Underscorex.Functions do
 
       # def bind(event, func), do: :coming_soon
 
-
     end
   end
 end
 
 defmodule U do
-
   use Underscorex.Utility
   use Underscorex.Iterators
   use Underscorex.Arrays
   use Underscorex.Functions 
-
 end
