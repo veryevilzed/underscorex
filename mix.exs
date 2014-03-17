@@ -10,7 +10,9 @@ defmodule Underscorex.Mixfile do
 
   # Configuration for the OTP application
   def application do
-    []
+    [
+      applications: [:crypto]
+    ]
   end
 
   # Returns the list of dependencies in the format:
@@ -20,7 +22,9 @@ defmodule Underscorex.Mixfile do
   # { :barbat, "~> 0.1", github: "elixir-lang/barbat" }
   defp deps do
     [
-       {:"elixir-datetime", github: "alco/elixir-datetime"}
+       { :"elixir-datetime", github: "alco/elixir-datetime"},
+       { :uuid, github: "avtobiff/erlang-uuid"},
+       { :hex, github: "d0rc/hex"}
     ]
   end
 end
