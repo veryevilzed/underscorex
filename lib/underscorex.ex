@@ -58,7 +58,7 @@ defmodule Underscorex.Iterators do
       def any(col, iter, ctx), do: some(col, iter, ctx)
       def any(col, iter), do: some(col, iter)
 
-      def contains(col, value), do: col |> any? fn(item) -> item == value end
+      def contains(col, value), do: col |> Enum.any? fn(item) -> item == value end
       def include(col, value), do: contains(col, value)
 
       def invoke(col, func, args), do: col |> map fn({item, _})-> apply(func, [item] ++ args) end
@@ -78,23 +78,35 @@ defmodule Underscorex.Iterators do
       def pluck(col, propname, default) when is_record(col), do: pluck(col.to_keywords, propname, default)
       def pluck(col, propname, default), do: col |> Enum.map fn(item) -> takeitem(item, propname, default) end
 
-      def sort(col), do: Enum.sort col
-      def sort(col, func), do: Enum.sort(col, func)
-      def sort(col, func, ctx), do: Enum.sort(col, fn(x)-> func.({x, ctx}) end)
+      def sort_by(col), do: Enum.sort col
+      def sort_by(col, func), do: Enum.sort(col, func)
+      def sort_by(col, func, ctx), do: Enum.sort(col, fn(x)-> func.({x, ctx}) end)
 
-      # def group(col, func, ctx) do 
-      #   Enum.reduce col, [], fn(item, res)-> 
-      #       new_key = func.({item, ctx})
-      #       case Dict.has_key?(res, new_key) do
-      #         true -> 
-      #           res[new_key] = res[new_key] ++ [item]
-      #           res
-      #         _ -> 
-      #           res[new_key] = [item]
-      #           res
-      #       end
-      #     end
-      # end
+      def group_by(col, iter, ctx) do 
+        Enum.reduce col, [], fn(item, res)-> 
+            new_key = iter.({item, ctx})
+            case Dict.has_key?(res, new_key) do
+              true -> Dict.put res, new_key, res[new_key] ++ [item]
+              _ -> Dict.put res, new_key, [item]
+            end
+          end
+      end
+
+      def group_by(col, iter) do 
+        Enum.reduce col, [], fn(item, res) -> 
+            new_key = iter.(item)
+            case Dict.has_key?(res, new_key) do
+              true -> Dict.put res, new_key, res[new_key] ++ [item]
+              _ -> Dict.put res, new_key, [item]
+            end
+          end
+      end
+
+      def index_by(col, iter), do: group_by(col, iter) |> Enum.map fn({key, [h|_]}) -> {key, h} end
+      def index_by(col, iter, ctx), do: group_by(col, iter, ctx) |> Enum.map fn({key, [h|_]}) -> {key, h} end
+
+      def count_by(col, iter), do: group_by(col, iter) |> Enum.map fn({key, data}) -> {key, length(data)} end
+      def count_by(col, iter, ctx), do: group_by(col, iter, ctx) |> Enum.map fn({key, data}) -> {key, length(data)} end
 
       def where(dict, args \\ []), do: filter(dict, fn({item, _})-> Underscorex.Utility.matches(item, args) end)
       def find_where(dict, args), do: find(dict, fn({item, _})-> Underscorex.Utility.matches(item, args) end)
@@ -104,6 +116,8 @@ defmodule Underscorex.Iterators do
       def shuffle(col), do: Enum.shuffle col
       def reverse(col), do: Enum.reverse col
 
+      def size(col) when is_list(col), do: length(col)
+      def size(col), do: col |> Dict.keys |> length
 
 end
 
@@ -178,9 +192,39 @@ defmodule Underscorex.Utility do
         end) |> Enum.all? &(&1)
       end
 
-      def result(obj, attrs) when is_list(obj) && is_integer(attrs), do: Enum.fetch!(obj, attrs)
-      def result(obj, attrs) when is_tuple(obj) && is_integer(attrs), do: elem(obj, attrs)
+      def result({:ok, res}), do: res
+      def result(obj, attrs) when is_list(obj) and is_integer(attrs), do: Enum.fetch!(obj, attrs)
+      def result(obj, attrs) when is_tuple(obj) and is_integer(attrs), do: elem(obj, attrs)
       def result(obj, attrs), do: obj[attrs]
+
+end
+
+defmodule Underscorex.Functions do
+  
+  def now(:sec), do: Date.convert(Date.now, :sec)
+  def now(:msec), do: Float.floor(Time.now(:msec))
+  def now, do: Time.now(:msec)
+  def delay(time, func) do
+    pid = spawn(fn ->
+      receive do
+        {:time_message, func} -> func.()
+        _oth -> _oth
+      end
+    end)
+    {pid, :erlang.send_after(time, pid, {:time_message, func})}
+  end
+
+
+  def delay(time, func, args) do
+    pid = spawn(fn ->
+      receive do
+        {:time_message, func} -> apply(func, args)
+        _oth -> _oth
+      end
+    end)
+    {pid, :erlang.send_after(time, pid, {:time_message, func})}
+  end
+
 
 end
 
