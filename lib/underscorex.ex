@@ -200,8 +200,6 @@ defmodule Underscorex.Utility do
       def result(obj, attrs) when is_tuple(obj) and is_integer(attrs), do: elem(obj, attrs)
       def result(obj, attrs), do: obj[attrs]
 
-
-
     end
   end
 end
@@ -210,9 +208,11 @@ defmodule Underscorex.Functions do
   defmacro __using__(_options) do
     quote location: :keep do
 
-      def now(:sec), do: Date.convert(Date.now, :sec)
-      def now(:msec), do: Float.floor(Time.now(:msec))
-      def now, do: Time.now(:msec)
+      def now do 
+        {mega, secs, _} = :erlang.now()
+        mega*1000000 + secs
+      end
+
       def uuid, do: :uuid.uuid1 |> :uuid.to_string
       def md5(t), do: :crypto.md5(t) |> Hex.encode
 

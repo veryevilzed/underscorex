@@ -4,7 +4,7 @@ defmodule Underscorex.Mixfile do
   def project do
     [ app: :underscorex,
       version: "0.0.1",
-      elixir: "~> 0.12.5-dev",
+      elixir: "~> 0.13.0",
       deps: deps ]
   end
 
@@ -22,7 +22,6 @@ defmodule Underscorex.Mixfile do
   # { :barbat, "~> 0.1", github: "elixir-lang/barbat" }
   defp deps do
     [
-       { :"elixir-datetime", github: "alco/elixir-datetime"},
        { :uuid, github: "avtobiff/erlang-uuid"},
        { :hex, github: "d0rc/hex"}
     ]
