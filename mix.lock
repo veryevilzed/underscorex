@@ -1,3 +1,5 @@
-[ "elixir-datetime": {:git, "git://github.com/alco/elixir-datetime.git", "53a2d5da6ea98b2fbf2d51dd2ccc4eefb5d9b4e4", []},
+%{"elixir-datetime": {:git, "git://github.com/alco/elixir-datetime.git", "53a2d5da6ea98b2fbf2d51dd2ccc4eefb5d9b4e4", []},
   "hex": {:git, "git://github.com/d0rc/hex.git", "27f53455951e8e763227ad23d485b41f08fde47a", []},
-  "uuid": {:git, "git://github.com/avtobiff/erlang-uuid.git", "9cfe9666f1787d27550495c9c9cfa0297d861252", []} ]
+  "hexagon": {:git, "git://github.com/veryevilzed/hex.git", "d1afa9c9f37f85d32e6d2d8bf327fc8a15a12f42", []},
+  "quickrand": {:git, "https://github.com/okeuday/quickrand.git", "0395a10b94472ccbe38b62bbfa9d0fc1ddac1dd7", [tag: "v1.3.2"]},
+  "uuid": {:git, "git://github.com/okeuday/uuid.git", "f7c141c8359cd690faba0d2684b449a07db8e915", []}}
